@@ -33,6 +33,7 @@ namespace Api.Controllers
 		public IActionResult AddProduct([FromBody] ProductAddDto productAddDto)
 		{
 			var products = _service.AddProduct(productAddDto);
+			//test
 			return Ok(products);
 		}
 	}
