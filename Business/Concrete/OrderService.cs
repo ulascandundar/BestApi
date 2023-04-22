@@ -37,8 +37,8 @@ namespace Business.Concrete
 				totalPrice += orderentryprice;
 			}
 			order.TotalPrice = totalPrice;
-			var walletPrice= _db.Wallet.Where(o => o.AppUserId == id).Select(o => o.Amount).FirstOrDefault();
-			if (totalPrice > walletPrice) return new ErrorResult("Bakiyeniz yetersiz");
+			var commitwalletresult = CommitToWallet(id, totalPrice);
+			if (!commitwalletresult.Success) return result;
 			_db.Order.Add(order);
 
 			_db.SaveChanges();
@@ -56,6 +56,15 @@ namespace Business.Concrete
 				TotalPrice=o.TotalPrice
 			}).GetPaged(pageInputDto.PageIndex, pageInputDto.PageSize);
 			return new SuccessDataResult<PagedResult<GetOrderDto>>(datas);
+		}
+		private IResult CommitToWallet(long id, decimal totalPrice)
+		{
+			var wallet = _db.Wallet.Where(o=>o.AppUserId== id).FirstOrDefault();
+			if (totalPrice > wallet.Amount) return new ErrorResult("Bakiyeniz yetersiz");
+			wallet.Amount-=totalPrice;
+			_db.Wallet.Update(wallet);
+			_db.WalletTransaction.Add(new WalletTransaction { WalletId = wallet.Id, IsActive = true, Amount = totalPrice, IsPositive = false });
+			return new SuccessResult();
 		}
 		private IResult ProductIdsControl(List<long> ids)
 		{
