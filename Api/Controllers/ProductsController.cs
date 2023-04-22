@@ -19,11 +19,7 @@ namespace Api.Controllers
 		{
 			_service = service;
 		}
-<<<<<<< HEAD
 		/// GET api/products
-=======
-		/// GET api/products//
->>>>>>> master
 		[HttpGet]
 		[Authorize]
 		public IActionResult GetAllWithPaging([FromQuery]PageInputDto pageInputDto)
