@@ -13,5 +13,6 @@ namespace Business.Abstract
 	{
 		public IResult PlaceOrder(OrderDto orderDto,long id);
 		public IDataResult<PagedResult<GetOrderDto>> GetOrdersWithPaging(PageInputDto pageInputDto, long userId);
+		public IResult OrderStatusUpdate(OrderStatusUpdateDto orderStatusUpdateDto);
 	}
 }
