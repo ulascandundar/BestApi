@@ -29,12 +29,18 @@ namespace Api.Controllers
 		}
 		/// POST api/products
 		[HttpPost]
-		[Authorize]
 		public IActionResult AddProduct([FromBody] ProductAddDto productAddDto)
 		{
 			var products = _service.AddProduct(productAddDto);
 			//test
 			return Ok(products);
+		}
+		[HttpGet("qr-code")]
+		[Authorize]
+		public IActionResult GetProductQrCode([FromQuery] long productId)
+		{
+			var qrcode = _service.QrCodeToProduct(productId);
+			return Ok(qrcode);
 		}
 	}
 }

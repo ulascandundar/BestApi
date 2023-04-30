@@ -87,6 +87,7 @@ builder.Services.AddScoped<IProductService,ProductService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<SeedService>();
+builder.Services.AddScoped<IQrCodeService,QrCodeService>();
 var app = builder.Build();
 var serviceProvider = builder.Services.BuildServiceProvider();
 var seedService = serviceProvider.GetService<SeedService>();

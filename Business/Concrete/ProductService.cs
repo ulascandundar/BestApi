@@ -12,6 +12,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace Business.Concrete
@@ -20,10 +21,12 @@ namespace Business.Concrete
 	{
 		private BestApiDbContext _db;
 		private readonly IMapper _mapper;
-		public ProductService(BestApiDbContext db, IMapper mapper)
+		private readonly IQrCodeService _qrCodeService;
+		public ProductService(BestApiDbContext db, IMapper mapper, IQrCodeService qrCodeService)
 		{
 			_db = db;
 			_mapper = mapper;
+			_qrCodeService = qrCodeService;
 		}
 
 		public IDataResult<PagedResult<ProductWithCategoryDto>> GetProductWithPaging(PageInputDto pageInputDto)
@@ -68,7 +71,29 @@ namespace Business.Concrete
 			return new SuccessResult();
 		}
 
-
+		public IDataResult<byte[]> QrCodeToProduct(long productId)
+		{
+			var result = BusinessRules.Run(()=> IsIdNull(productId),() => ProductAnyControl(productId));
+			if (result != null) return new ErrorDataResult<byte[]>(result.Message);
+			ProductDto productDto = _db.Product.Where(o=>o.Id==productId).Select(o=> new ProductDto
+			{
+				Name = o.Name,
+				Id = o.Id,
+				Price = o.Price,
+				Stock = o.Stock,
+				CreatedDate= o.CreatedDate,
+				Desciption = new DescriptionDto
+				{
+					Id= o.DescriptionId,
+					Content= o.Description.Content,
+					Title = o.Description.Title,
+				},
+				UpdatedDate= o.UpdatedDate
+			}).FirstOrDefault();
+			string plainText = JsonSerializer.Serialize(productDto);
+			var qrCode = _qrCodeService.GenerateQrCode(plainText);
+			return new SuccessDataResult<byte[]>(qrCode);
+		}
 
 		private IResult NameControl(string productName)
 		{
@@ -83,6 +108,11 @@ namespace Business.Concrete
 				if (!isAny) return new ErrorResult($"{item} id li kategori bulunamadı");
 			}
 			return new SuccessResult();
+		}
+		private IResult ProductAnyControl(long id)
+		{
+			var isAny = _db.Product.Where(o => o.Id == id && o.IsActive).Any();
+			return isAny ? new SuccessResult() : new ErrorResult("Böyle bir ürün bulunamadı");
 		}
 	}
 }
