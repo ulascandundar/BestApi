@@ -4,11 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Business.Dtos
+namespace Entities.Dtos
 {
-	public class OrderEntryDto
+	public class LoginDto
 	{
-		public long ProductId { get; set; }
-		public int Quantity { get; set; }
+		public string UserName { get; set; }
+		public string Password { get; set; }
 	}
 }

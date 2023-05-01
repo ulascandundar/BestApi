@@ -1,30 +1,25 @@
 ﻿using AutoMapper;
 using Business.Abstract;
-using Business.Dtos;
 using Core.Dtos;
-using Core.Extensions;
 using Core.Utilities.Business;
 using Core.Utilities.Business.BaseControls;
 using Core.Utilities.Results;
+using DataAccess.Abstract;
 using DataAccess.Context;
 using Entities.Concrete;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using Entities.Dtos;
 using System.Text.Json;
-using System.Threading.Tasks;
 
 namespace Business.Concrete
 {
 	public class ProductService : BaseControls, IProductService
 	{
-		private BestApiDbContext _db;
+		protected IUnitOfWork UnitOfWork { get; }
 		private readonly IMapper _mapper;
 		private readonly IQrCodeService _qrCodeService;
-		public ProductService(BestApiDbContext db, IMapper mapper, IQrCodeService qrCodeService)
+		public ProductService(IUnitOfWork unitOfWork, IMapper mapper, IQrCodeService qrCodeService)
 		{
-			_db = db;
+			UnitOfWork=unitOfWork;
 			_mapper = mapper;
 			_qrCodeService = qrCodeService;
 		}
@@ -33,17 +28,7 @@ namespace Business.Concrete
 		{
 			var result = BusinessRules.Run(() => PagingInputControl(pageInputDto));
 			if (result !=null) return new ErrorDataResult<PagedResult<ProductWithCategoryDto>>(result.Message);
-			var data = _db.Product.Where(o => o.IsActive).Select(o => new ProductWithCategoryDto
-			{
-				CreatedDate = o.CreatedDate,
-				Id = o.Id,
-				Name = o.Name,
-				Price = o.Price,
-				Stock = o.Stock,
-				UpdatedDate = o.UpdatedDate,
-				Desciption = new DescriptionDto { Id = o.DescriptionId, Content = o.Description.Content, Title = o.Description.Title },
-				Categories= o.ProductCategory.Select(o=>new CategoryDto { Name=o.Category.Name,Id=o.Category.Id,Description=o.Category.Description}).ToList()
-			}).GetPaged(pageInputDto.PageIndex, pageInputDto.PageSize);
+			var data = UnitOfWork.Products.GetProductWithPaging(pageInputDto);
 			return new SuccessDataResult<PagedResult<ProductWithCategoryDto>>(data);
 		}
 
@@ -65,9 +50,8 @@ namespace Business.Concrete
 			{
 				product.ProductCategory.Add(new ProductCategory { CategoryId = item, IsActive = true });
 			}
-			_db.Product.Add(product);
-			//product.ProductCategory.Add(new ProductCategory { IsActive= true,CategoryId=productAddDto.CategoryId });
-			_db.SaveChanges();
+			UnitOfWork.Products.Add(product);
+			UnitOfWork.Save();
 			return new SuccessResult();
 		}
 
@@ -75,21 +59,7 @@ namespace Business.Concrete
 		{
 			var result = BusinessRules.Run(()=> IsIdNull(productId),() => ProductAnyControl(productId));
 			if (result != null) return new ErrorDataResult<byte[]>(result.Message);
-			ProductDto productDto = _db.Product.Where(o=>o.Id==productId).Select(o=> new ProductDto
-			{
-				Name = o.Name,
-				Id = o.Id,
-				Price = o.Price,
-				Stock = o.Stock,
-				CreatedDate= o.CreatedDate,
-				Desciption = new DescriptionDto
-				{
-					Id= o.DescriptionId,
-					Content= o.Description.Content,
-					Title = o.Description.Title,
-				},
-				UpdatedDate= o.UpdatedDate
-			}).FirstOrDefault();
+			ProductDto productDto = UnitOfWork.Products.GetProductDtoById(productId);
 			string plainText = JsonSerializer.Serialize(productDto);
 			var qrCode = _qrCodeService.GenerateQrCode(plainText);
 			return new SuccessDataResult<byte[]>(qrCode);
@@ -98,29 +68,27 @@ namespace Business.Concrete
 		{
 			var result = BusinessRules.Run(() => IsIdNull(updateProductStockDto.ProductId), () => ProductAnyControl(updateProductStockDto.ProductId));
 			if (result != null) return result;
-			var product = _db.Product.Where(o => o.Id == updateProductStockDto.ProductId).FirstOrDefault();
-			product.Stock = updateProductStockDto.Stock;
-			_db.Product.Update(product);
-			_db.SaveChanges();
+			UnitOfWork.Products.UpdateProductStock(updateProductStockDto);
+			UnitOfWork.Save();
 			return new SuccessResult();
 		}
 		private IResult NameControl(string productName)
 		{
-			var isAny = _db.Product.Where(o=>o.IsActive&&o.Name.ToLower() == productName.ToLower()).Any();
+			var isAny = UnitOfWork.Products.Any(o=>o.IsActive&&o.Name.ToLower() == productName.ToLower());
 			return isAny ? new ErrorResult("Ürün ismi daha önce kullanılmış") : new SuccessResult();
 		}
 		private IResult CategoryControl(List<long> categoryIds)
 		{
 			foreach (var item in categoryIds)
 			{
-				var isAny = _db.Category.Where(o => o.Id == item && o.IsActive).Any();
+				var isAny = UnitOfWork.Categories.Any(o => o.Id == item && o.IsActive);
 				if (!isAny) return new ErrorResult($"{item} id li kategori bulunamadı");
 			}
 			return new SuccessResult();
 		}
 		private IResult ProductAnyControl(long id)
 		{
-			var isAny = _db.Product.Where(o => o.Id == id && o.IsActive).Any();
+			var isAny = UnitOfWork.Products.Any(o => o.Id == id && o.IsActive);
 			return isAny ? new SuccessResult() : new ErrorResult("Böyle bir ürün bulunamadı");
 		}
 

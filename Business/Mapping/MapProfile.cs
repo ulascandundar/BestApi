@@ -1,5 +1,5 @@
 ﻿using AutoMapper;
-using Business.Dtos;
+using Entities.Dtos;
 using Entities.Concrete;
 using System;
 using System.Collections.Generic;

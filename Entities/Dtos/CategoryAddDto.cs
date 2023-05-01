@@ -4,11 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Business.Dtos
+namespace Entities.Dtos
 {
-	public class DescriptionAddDto
+	public class CategoryAddDto
 	{
-		public string Title { get; set; }
-		public string Content { get; set; }
+		public string Name { get; set; }
+		public string Description { get; set; }
 	}
 }

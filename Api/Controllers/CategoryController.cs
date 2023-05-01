@@ -1,6 +1,6 @@
 ﻿using Autofac.Core;
 using Business.Abstract;
-using Business.Dtos;
+using Entities.Dtos;
 using Core.Dtos;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
