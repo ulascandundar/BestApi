@@ -1,6 +1,6 @@
-﻿using Business.Dtos;
-using Core.Dtos;
+﻿using Core.Dtos;
 using Core.Utilities.Results;
+using Entities.Dtos;
 using System;
 using System.Collections.Generic;
 using System.Linq;

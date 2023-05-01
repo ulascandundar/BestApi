@@ -1,4 +1,4 @@
-﻿using Business.Dtos;
+﻿using Entities.Dtos;
 using Core.Dtos;
 using Core.Utilities.Results;
 using System;

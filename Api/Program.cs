@@ -4,6 +4,8 @@ using Business.Abstract;
 using Business.Concrete;
 using Business.Mapping;
 using Business.Validations;
+using DataAccess.Abstract;
+using DataAccess.Concrete;
 using DataAccess.Context;
 using DataAccess.Seeds;
 using Entities.Concrete;
@@ -83,6 +85,7 @@ builder.Services.AddAuthentication(options =>
 		ValidateAudience = false
 	};
 });
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IProductService,ProductService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IOrderService, OrderService>();

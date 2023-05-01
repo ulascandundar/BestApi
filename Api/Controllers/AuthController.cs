@@ -16,6 +16,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.Authorization;
 using DataAccess.Context;
 using Core.Extensions;
+using Entities.Dtos;
 
 namespace Api.Controllers
 {
@@ -81,12 +82,12 @@ namespace Api.Controllers
 			}
 		}
 		[HttpPost("login")]
-		public async Task<IActionResult> Login(string userName, string password)
+		public async Task<IActionResult> Login([FromBody] LoginDto loginDto)
 		{
-			var result = await _signInManager.PasswordSignInAsync(userName, password, false, false);
+			var result = await _signInManager.PasswordSignInAsync(loginDto.UserName, loginDto.Password, false, false);
 			if (result.Succeeded)
 			{
-				var appUser = await _userManager.Users.SingleOrDefaultAsync(r => r.UserName == userName);
+				var appUser = await _userManager.Users.SingleOrDefaultAsync(r => r.UserName == loginDto.UserName);
 				var rolesAsync = await _userManager.GetRolesAsync(appUser);
 
 				var claims = new List<Claim>

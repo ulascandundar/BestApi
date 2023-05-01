@@ -1,10 +1,11 @@
 ﻿using Business.Abstract;
-using Business.Dtos;
+using Entities.Dtos;
 using Core.Dtos;
 using Core.Extensions;
 using Core.Utilities.Business;
 using Core.Utilities.Business.BaseControls;
 using Core.Utilities.Results;
+using DataAccess.Abstract;
 using DataAccess.Context;
 using Entities.Concrete;
 using System;
@@ -17,18 +18,18 @@ namespace Business.Concrete
 {
 	public class CategoryService : BaseControls, ICategoryService
 	{
-		private BestApiDbContext _db;
+		protected IUnitOfWork UnitOfWork { get; }
 
-		public CategoryService(BestApiDbContext db)
+		public CategoryService(IUnitOfWork unitOfWork)
 		{
-			_db = db;
+			UnitOfWork = unitOfWork;
 		}
 
 		public IResult AddCategory(CategoryAddDto categoryAddDto)
 		{
 			Category category = new Category { Description = categoryAddDto.Description, Name = categoryAddDto.Name };
-			_db.Category.Add(category);
-			_db.SaveChanges();
+			UnitOfWork.Categories.Add(category);
+			UnitOfWork.Save();
 			return new SuccessResult();
 		}
 
@@ -36,8 +37,7 @@ namespace Business.Concrete
 		{
 			var result = BusinessRules.Run(() => PagingInputControl(pageInputDto));
 			if (result != null) return new ErrorDataResult<PagedResult<CategoryDto>>(result.Message);
-			var data = _db.Category.Where(o=>o.IsActive).Select(o =>  new CategoryDto { Name = o.Name, Description = o.Description, CreatedDate = o.CreatedDate,
-				UpdatedDate = o.UpdatedDate }).GetPaged(pageInputDto.PageIndex,pageInputDto.PageSize);
+			var data = UnitOfWork.Categories.GetCategoryWithPaging(pageInputDto);
 			return new SuccessDataResult<PagedResult<CategoryDto>>(data);
 		}
 	}
