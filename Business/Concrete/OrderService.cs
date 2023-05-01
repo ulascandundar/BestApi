@@ -57,6 +57,16 @@ namespace Business.Concrete
 			}).GetPaged(pageInputDto.PageIndex, pageInputDto.PageSize);
 			return new SuccessDataResult<PagedResult<GetOrderDto>>(datas);
 		}
+		public IResult OrderStatusUpdate(OrderStatusUpdateDto orderStatusUpdateDto)
+		{
+			var result = BusinessRules.Run(() => IsIdNull(orderStatusUpdateDto.OrderId),() => OrderAnyControl(orderStatusUpdateDto.OrderId));
+			if (result != null) return result;
+			var order = _db.Order.Find(orderStatusUpdateDto.OrderId);
+			order.OrderStatus = orderStatusUpdateDto.OrderStatus;
+			_db.Order.Update(order);
+			_db.SaveChanges();
+			return new SuccessResult();
+		}
 		private IResult CommitToWallet(long id, decimal totalPrice)
 		{
 			var wallet = _db.Wallet.Where(o=>o.AppUserId== id).FirstOrDefault();
@@ -76,6 +86,10 @@ namespace Business.Concrete
 				}
 			}
 			return new SuccessResult();
+		}
+		private IResult OrderAnyControl(long orderId)
+		{
+			return _db.Order.Where(o => o.IsActive && o.Id == orderId).Any() ? new SuccessResult() : new ErrorResult("Böyle bir sipariş yok");
 		}
 	}
 }

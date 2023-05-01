@@ -1,4 +1,5 @@
 ﻿using Core.Entities;
+using Entities.Enums;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -16,5 +17,6 @@ namespace Entities.Concrete
 		public virtual AppUser AppUser { get; set; }
 		public virtual ICollection<OrderEntry> Entries { get; set; }
 		public decimal TotalPrice { get; set; }
+		public OrderStatus OrderStatus { get; set; }
 	}
 }

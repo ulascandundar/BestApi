@@ -38,5 +38,12 @@ namespace Api.Controllers
 		{
 			return Ok();
 		}
+		[HttpPut]
+		[Authorize(Roles = "Customer")]
+		public IActionResult OrderStatusUpdate([FromBody] OrderStatusUpdateDto orderStatusUpdateDto)
+		{
+			var result = _orderService.OrderStatusUpdate(orderStatusUpdateDto);
+			return Ok(result);
+		}
 	}
 }

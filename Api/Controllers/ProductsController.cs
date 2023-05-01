@@ -36,5 +36,19 @@ namespace Api.Controllers
 			//test
 			return Ok(products);
 		}
+		[HttpGet("qr-code")]
+		[Authorize]
+		public IActionResult GetProductQrCode([FromQuery] long productId)
+		{
+			var qrcode = _service.QrCodeToProduct(productId);
+			return qrcode.Success ? File(qrcode.Data, "image/png") : BadRequest(qrcode);
+		}
+		[HttpPut("stock")]
+		[Authorize]
+		public IActionResult UpdateProductStock([FromBody] UpdateProductStockDto updateProductStockDto)
+		{
+			var result = _service.UpdateProductStock(updateProductStockDto);
+			return Ok(result);
+		}
 	}
 }
