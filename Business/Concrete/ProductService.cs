@@ -94,7 +94,16 @@ namespace Business.Concrete
 			var qrCode = _qrCodeService.GenerateQrCode(plainText);
 			return new SuccessDataResult<byte[]>(qrCode);
 		}
-
+		public IResult UpdateProductStock(UpdateProductStockDto updateProductStockDto)
+		{
+			var result = BusinessRules.Run(() => IsIdNull(updateProductStockDto.ProductId), () => ProductAnyControl(updateProductStockDto.ProductId));
+			if (result != null) return result;
+			var product = _db.Product.Where(o => o.Id == updateProductStockDto.ProductId).FirstOrDefault();
+			product.Stock = updateProductStockDto.Stock;
+			_db.Product.Update(product);
+			_db.SaveChanges();
+			return new SuccessResult();
+		}
 		private IResult NameControl(string productName)
 		{
 			var isAny = _db.Product.Where(o=>o.IsActive&&o.Name.ToLower() == productName.ToLower()).Any();
@@ -114,5 +123,6 @@ namespace Business.Concrete
 			var isAny = _db.Product.Where(o => o.Id == id && o.IsActive).Any();
 			return isAny ? new SuccessResult() : new ErrorResult("Böyle bir ürün bulunamadı");
 		}
+
 	}
 }

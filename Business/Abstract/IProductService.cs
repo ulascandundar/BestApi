@@ -14,6 +14,6 @@ namespace Business.Abstract
 		public IDataResult<PagedResult<ProductWithCategoryDto>> GetProductWithPaging(PageInputDto pageInputDto);
 		public IResult AddProduct(ProductAddDto productAddDto);
 		public IDataResult<byte[]> QrCodeToProduct(long productId);
-
+		public IResult UpdateProductStock(UpdateProductStockDto updateProductStockDto);
 	}
 }

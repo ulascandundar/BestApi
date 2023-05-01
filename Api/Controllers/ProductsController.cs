@@ -43,5 +43,12 @@ namespace Api.Controllers
 			var qrcode = _service.QrCodeToProduct(productId);
 			return qrcode.Success ? File(qrcode.Data, "image/png") : BadRequest(qrcode);
 		}
+		[HttpPut("stock")]
+		[Authorize]
+		public IActionResult UpdateProductStock([FromBody] UpdateProductStockDto updateProductStockDto)
+		{
+			var result = _service.UpdateProductStock(updateProductStockDto);
+			return Ok(result);
+		}
 	}
 }
