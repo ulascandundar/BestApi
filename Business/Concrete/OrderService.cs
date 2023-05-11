@@ -1,12 +1,13 @@
 ﻿using Business.Abstract;
-using Business.Dtos;
 using Core.Dtos;
 using Core.Extensions;
 using Core.Utilities.Business;
 using Core.Utilities.Business.BaseControls;
 using Core.Utilities.Results;
+using DataAccess.Abstract;
 using DataAccess.Context;
 using Entities.Concrete;
+using Entities.Dtos;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,70 +18,51 @@ namespace Business.Concrete
 {
 	public class OrderService : BaseControls, IOrderService
 	{
-		private BestApiDbContext _db;
+		protected IUnitOfWork UnitOfWork { get; }
 
-		public OrderService(BestApiDbContext db)
+		public OrderService(IUnitOfWork unitOfWork)
 		{
-			_db = db;
+			UnitOfWork= unitOfWork;
 		}
 
 		public IResult PlaceOrder(OrderDto orderDto, long id)
 		{
 			var result = BusinessRules.Run(() => ProductIdsControl(orderDto.OrderEntries.Select(o => o.ProductId).ToList()));
 			if (result != null) return result;
-			decimal totalPrice = 0;
-			Order order = new Order(); order.Entries = new List<OrderEntry>();
-			foreach (var item in orderDto.OrderEntries)
-			{
-				var orderentryprice = _db.Product.Where(o => o.Id == item.ProductId).Select(item => item.Price).FirstOrDefault();
-				order.Entries.Add(new OrderEntry { ProductId = item.ProductId, Quantity = item.Quantity, IsActive = true, Price = orderentryprice });
-				totalPrice += orderentryprice;
-			}
-			order.TotalPrice = totalPrice;
-			var commitwalletresult = CommitToWallet(id, totalPrice);
+			Order order = UnitOfWork.Orders.PlaceOrder(orderDto, id);
+			var commitwalletresult = CommitToWallet(id, order.TotalPrice);
 			if (!commitwalletresult.Success) return result;
-			_db.Order.Add(order);
-
-			_db.SaveChanges();
+			UnitOfWork.Save();
 			return new SuccessResult();
 		}
 		public IDataResult<PagedResult<GetOrderDto>> GetOrdersWithPaging(PageInputDto pageInputDto,long userId)
 		{
 			var result = BusinessRules.Run(() => PagingInputControl(pageInputDto));
 			if (result != null) return new ErrorDataResult<PagedResult<GetOrderDto>>(result.Message);
-			var datas =  _db.Order.Where(o=>o.IsActive&&o.AppUserId==userId).Select(o=> new GetOrderDto 
-			{
-				Id = o.Id,
-				Created=o.CreatedDate,
-				Description=o.Description,
-				TotalPrice=o.TotalPrice
-			}).GetPaged(pageInputDto.PageIndex, pageInputDto.PageSize);
+			var datas =  UnitOfWork.Orders.GetOrdersWithPaging(pageInputDto, userId);
 			return new SuccessDataResult<PagedResult<GetOrderDto>>(datas);
 		}
 		public IResult OrderStatusUpdate(OrderStatusUpdateDto orderStatusUpdateDto)
 		{
 			var result = BusinessRules.Run(() => IsIdNull(orderStatusUpdateDto.OrderId),() => OrderAnyControl(orderStatusUpdateDto.OrderId));
 			if (result != null) return result;
-			var order = _db.Order.Find(orderStatusUpdateDto.OrderId);
-			order.OrderStatus = orderStatusUpdateDto.OrderStatus;
-			_db.Order.Update(order);
-			_db.SaveChanges();
+			UnitOfWork.Orders.OrderStatusUpdate(orderStatusUpdateDto);
+			UnitOfWork.Save();
 			return new SuccessResult();
 		}
 		private IResult CommitToWallet(long id, decimal totalPrice)
 		{
-			var wallet = _db.Wallet.Where(o=>o.AppUserId== id).FirstOrDefault();
+			var wallet = UnitOfWork.Wallets.GetAsQueryable().Where(o=>o.AppUserId== id).FirstOrDefault();
 			if (totalPrice > wallet.Amount) return new ErrorResult("Bakiyeniz yetersiz");
 			wallet.Amount-=totalPrice;
-			_db.Wallet.Update(wallet);
-			_db.WalletTransaction.Add(new WalletTransaction { WalletId = wallet.Id, IsActive = true, Amount = totalPrice, IsPositive = false });
+			UnitOfWork.Wallets.Update(wallet);
 			return new SuccessResult();
 		}
 		private IResult ProductIdsControl(List<long> ids)
 		{
 			foreach (var item in ids)
 			{
-				if (!_db.Product.Where(o => o.Id == item && o.IsActive).Any())
+				if (!UnitOfWork.Products.Any(o => o.Id == item && o.IsActive))
 				{
 					return new ErrorResult($"{item} id li ürün bulunamadı");
 				}
@@ -89,7 +71,7 @@ namespace Business.Concrete
 		}
 		private IResult OrderAnyControl(long orderId)
 		{
-			return _db.Order.Where(o => o.IsActive && o.Id == orderId).Any() ? new SuccessResult() : new ErrorResult("Böyle bir sipariş yok");
+			return UnitOfWork.Products.Any(o => o.IsActive && o.Id == orderId) ? new SuccessResult() : new ErrorResult("Böyle bir sipariş yok");
 		}
 	}
 }

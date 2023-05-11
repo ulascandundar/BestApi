@@ -1,4 +1,4 @@
-﻿using Business.Dtos;
+﻿using Entities.Dtos;
 using FluentValidation;
 using System;
 using System.Collections.Generic;
