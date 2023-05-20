@@ -25,7 +25,7 @@ namespace Api.Controllers
 		//}
 		/// POST api/category
 		[HttpPost]
-		[Authorize]
+		[Authorize(Roles ="Admin")]
 		public IActionResult AddProduct([FromBody] CategoryAddDto categoryAddDto)
 		{
 			var products = _categoryService.AddCategory(categoryAddDto);
