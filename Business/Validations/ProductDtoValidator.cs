@@ -14,8 +14,8 @@ namespace Business.Validations
 		{
 			RuleFor(x => x.Name).NotNull().WithMessage("{PropertyName} is required").NotEmpty().WithMessage("{PropertyName} is required");
 			RuleFor(x => x.Name).NotEmpty().WithMessage("{PropertyName} is required").NotEmpty().WithMessage("{PropertyName} is required");
-			RuleFor(x => x.Price).InclusiveBetween(1, int.MaxValue).WithMessage("{PropertyName} must be greater 0");
-			RuleFor(x => x.Stock).InclusiveBetween(1, int.MaxValue).WithMessage("{PropertyName} must be greater 0");
+			RuleFor(x => x.Price).Must(o => o >= 0).WithMessage("Fiyat 0 dan düşük olamaz");
+			RuleFor(x => x.Stock).Must(o => o >= 0).WithMessage("Stok 0 dan düşük olamaz");
 		}
 	}
 }

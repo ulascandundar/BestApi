@@ -10,6 +10,10 @@ namespace Business.Validations
 {
 	public class UpdateProductStockDtoValidator : AbstractValidator<UpdateProductStockDto>
 	{
-
+		public UpdateProductStockDtoValidator()
+		{
+			RuleFor(x => x.Stock).InclusiveBetween(0, int.MaxValue).WithMessage("Stok 0 den küçük olamaz");
+			RuleFor(x => x.ProductId).InclusiveBetween(0, int.MaxValue).WithMessage("ProductId 0 den küçük olamaz");
+		}
 	}
 }
