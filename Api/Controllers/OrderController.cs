@@ -22,24 +22,24 @@ namespace Api.Controllers
 		[Authorize(Roles ="Customer")]
 		public IActionResult PlaceOrder([FromBody] OrderDto orderDto)
 		{
-			var products = _orderService.PlaceOrder(orderDto,GetUserId());
-			return Ok(products);
+			var result = _orderService.PlaceOrder(orderDto,GetUserId());
+			return Ok(result);
 		}
 		[HttpGet("orders")]
 		[Authorize(Roles = "Customer")]
 		public IActionResult GetOrders([FromQuery] PageInputDto pageInputDto)
 		{
-			var products = _orderService.GetOrdersWithPaging(pageInputDto,GetUserId());
-			return Ok(products);
+			var result = _orderService.GetOrdersWithPaging(pageInputDto,GetUserId());
+			return Ok(result);
 		}
 		[HttpGet("detail/{id}")]
 		[Authorize(Roles = "Customer")]
-		public IActionResult GetDetail([FromQuery] long id)
+		public IActionResult GetDetail(long id)
 		{
 			return Ok();
 		}
 		[HttpPut]
-		[Authorize(Roles = "Customer")]
+		[Authorize(Roles = "Admin")]
 		public IActionResult OrderStatusUpdate([FromBody] OrderStatusUpdateDto orderStatusUpdateDto)
 		{
 			var result = _orderService.OrderStatusUpdate(orderStatusUpdateDto);
